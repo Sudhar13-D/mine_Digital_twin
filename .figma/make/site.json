@@ -1,0 +1,10 @@
+{
+  "description": "This intuitive web application provides mine managers and agents with a comprehensive digital twin of mine designs, enabling clear visualization and easy access to critical features for effective decision-making.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

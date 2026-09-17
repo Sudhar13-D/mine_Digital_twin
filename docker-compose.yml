@@ -1,0 +1,89 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: subsideai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-subsideai}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: subsideai-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: subsideai-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-subsideai}
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: 1883
+      SECRET_KEY: ${SECRET_KEY:-subsideai-super-secret-key-production}
+    ports:
+      - "8000:8000"
+
+  # ============================================================================
+  # SENSOR SIMULATOR DISABLED:
+  # The system is now receiving real hardware telemetry from ESP32/LoRa node NODE01
+  # via the Raspberry Pi gateway publishing to topic mine/{panel}/node/{node_id}/reading.
+  # ============================================================================
+  # sensor-simulator:
+  #   build:
+  #     context: ./simulator
+  #     dockerfile: Dockerfile
+  #   container_name: subsideai-sensor-simulator
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - mosquitto
+  #     - backend
+  #   environment:
+  #     MQTT_BROKER_HOST: mosquitto
+  #     MQTT_BROKER_PORT: 1883
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: subsideai-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_WS_URL: ws://localhost:8000/ws/live
+    volumes:
+      - ./src:/app/src
+      - ./index.html:/app/index.html
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  mosquitto_data:
+  mosquitto_log:
