@@ -4,12 +4,12 @@ import { useTheme } from '../context/ThemeContext'
 
 // Geological strata (depth from surface in SVG pixels, surface starts at y=22 in the drawing area)
 const STRATA = [
-  { label: 'Topsoil', from: 0, to: 16, fillDark: '#8B7660', fillLight: '#A38F79' },
-  { label: 'Alluvium', from: 16, to: 40, fillDark: '#9E8B72', fillLight: '#BDB09E' },
-  { label: 'Sandstone', from: 40, to: 82, fillDark: '#7D6A55', fillLight: '#A89680', striped: true },
-  { label: 'Shale', from: 82, to: 108, fillDark: '#5C514A', fillLight: '#8C7F77' },
-  { label: 'Coal Seam', from: 108, to: 138, fillDark: '#1C1814', fillLight: '#2C2723' },
-  { label: 'Mudstone', from: 138, to: 178, fillDark: '#4A3F3A', fillLight: '#786C66' },
+  { label: 'Topsoil', from: 0, to: 16, fillDark: '#334155', fillLight: '#CBD5E1' },
+  { label: 'Alluvium', from: 16, to: 40, fillDark: '#1E293B', fillLight: '#94A3B8' },
+  { label: 'Sandstone', from: 40, to: 82, fillDark: '#172033', fillLight: '#64748B', striped: true },
+  { label: 'Shale', from: 82, to: 108, fillDark: '#0F172A', fillLight: '#475569' },
+  { label: 'Coal Seam', from: 108, to: 138, fillDark: '#070B12', fillLight: '#1E293B' },
+  { label: 'Mudstone', from: 138, to: 178, fillDark: '#131C2E', fillLight: '#334155' },
 ]
 
 // Pillars: x is their SVG x position (content starts at x=32, runs 768px wide)
@@ -38,9 +38,11 @@ export default function CrossSection({ nodes, selectedNode, activePanel }: Props
   const [expanded, setExpanded] = useState(false)
   const [sagAmt, setSagAmt] = useState(0)
 
-  const RISK_COLOR: Record<string, string> = colors.isDark
-    ? { LOW: '#4C8C6B', MEDIUM: '#D98E3B', HIGH: '#B3492E' }
-    : { LOW: '#15803D', MEDIUM: '#B45309', HIGH: '#DC2626' }
+  const RISK_COLOR: Record<string, string> = {
+    LOW: colors.riskLow,
+    MEDIUM: colors.riskMedium,
+    HIGH: colors.riskHigh,
+  }
 
   function pillarColor(risk: string) { return RISK_COLOR[risk] ?? RISK_COLOR.LOW }
 

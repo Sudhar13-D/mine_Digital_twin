@@ -40,9 +40,11 @@ export default function ReportsPage({ nodes, alerts, activePanel }: Props) {
   const [downloadBlobUrl, setDownloadBlobUrl] = useState<string | null>(null)
   const [downloadFilename, setDownloadFilename] = useState<string>('')
 
-  const RISK_COLOR: Record<string, string> = colors.isDark
-    ? { LOW: '#4C8C6B', MEDIUM: '#D98E3B', HIGH: '#B3492E' }
-    : { LOW: '#15803D', MEDIUM: '#B45309', HIGH: '#DC2626' }
+  const RISK_COLOR: Record<string, string> = {
+    LOW: colors.riskLow,
+    MEDIUM: colors.riskMedium,
+    HIGH: colors.riskHigh,
+  }
 
   const handleGenerate = async () => {
     setGenerating(true)
@@ -57,7 +59,7 @@ export default function ReportsPage({ nodes, alerts, activePanel }: Props) {
         format: selectedFormat as 'PDF' | 'CSV',
       })
       const ext = selectedFormat === 'CSV' ? 'csv' : 'pdf'
-      const filename = `subsideai_${reportType.toLowerCase().replace(/\s+/g, '_')}_${selectedPanel.toLowerCase().replace(/\s+/g, '_')}_${dateFrom}_to_${dateTo}.${ext}`
+      const filename = `sensora_${reportType.toLowerCase().replace(/\s+/g, '_')}_${selectedPanel.toLowerCase().replace(/\s+/g, '_')}_${dateFrom}_to_${dateTo}.${ext}`
       
       const url = window.URL.createObjectURL(blob)
       setDownloadBlobUrl(url)

@@ -128,9 +128,11 @@ export default function HelpPage() {
   const { colors } = useTheme()
   const [activeTab, setActiveTab] = useState<'guide' | 'faq' | 'shortcuts' | 'support'>('guide')
 
-  const RISK_COLOR = colors.isDark
-    ? { low: '#4C8C6B', med: '#D98E3B', high: '#B3492E' }
-    : { low: '#15803D', med: '#B45309', high: '#DC2626' }
+  const RISK_COLOR = {
+    low: colors.riskLow,
+    med: colors.riskMedium,
+    high: colors.riskHigh,
+  }
 
   const tabs = [
     { id: 'guide', label: 'Feature Guide' },

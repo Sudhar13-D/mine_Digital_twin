@@ -17,12 +17,21 @@ import { SensoraLogo } from './components/icons'
 
 function RiskBadge({ level, pulse }: { level: RiskLevel; pulse?: boolean }) {
   const { colors } = useTheme()
-  const colorMap: Record<RiskLevel, string> = colors.isDark
-    ? { LOW: '#4C8C6B', MEDIUM: '#D98E3B', HIGH: '#B3492E' }
-    : { LOW: '#15803D', MEDIUM: '#B45309', HIGH: '#DC2626' }
-  const bgMap: Record<RiskLevel, string> = colors.isDark
-    ? { LOW: 'rgba(76,140,107,0.12)', MEDIUM: 'rgba(217,142,59,0.15)', HIGH: 'rgba(179,73,46,0.15)' }
-    : { LOW: 'rgba(21,128,61,0.12)', MEDIUM: 'rgba(180,83,9,0.12)', HIGH: 'rgba(220,38,38,0.12)' }
+  const colorMap: Record<RiskLevel, string> = {
+    LOW: colors.riskLow,
+    MEDIUM: colors.riskMedium,
+    HIGH: colors.riskHigh,
+  }
+  const bgMap: Record<RiskLevel, string> = {
+    LOW: colors.riskLowBg,
+    MEDIUM: colors.riskMediumBg,
+    HIGH: colors.riskHighBg,
+  }
+  const borderMap: Record<RiskLevel, string> = {
+    LOW: colors.riskLowBorder,
+    MEDIUM: colors.riskMediumBorder,
+    HIGH: colors.riskHighBorder,
+  }
 
   return (
     <span
@@ -33,7 +42,7 @@ function RiskBadge({ level, pulse }: { level: RiskLevel; pulse?: boolean }) {
         fontWeight: 600,
         color: colorMap[level],
         background: bgMap[level],
-        border: `1px solid ${colorMap[level]}44`,
+        border: `1px solid ${borderMap[level]}`,
         padding: '1px 7px',
         borderRadius: '3px',
       }}
@@ -67,9 +76,10 @@ export default function App() {
 
   const [selectedNode, setSelectedNode] = useState<number | null>(1)
   const [activePanel, setActivePanel] = useState('Panel 1')
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeNav, setActiveNav] = useState('Monitoring')
   const [toast, setToast] = useState<{ id: string; message: string; level: RiskLevel } | null>(null)
+  const [mobileTab, setMobileTab] = useState<'map' | 'table' | 'risk' | 'all'>('map')
   
   // Auth state
   const [currentUser, setCurrentUser] = useState<{ full_name: string; role: string; email: string } | null>({
@@ -145,9 +155,9 @@ export default function App() {
   const highCount = nodes.filter(n => n.risk === 'HIGH').length
   const activeAlertCount = alerts.filter(a => a.status === 'active').length
 
-  const riskHighColor = colors.isDark ? '#B3492E' : '#DC2626'
-  const riskMedColor = colors.isDark ? '#D98E3B' : '#B45309'
-  const riskLowColor = colors.isDark ? '#4C8C6B' : '#15803D'
+  const riskHighColor = colors.riskHigh
+  const riskMedColor = colors.riskMedium
+  const riskLowColor = colors.riskLow
 
   // Render SENSORA Homepage if on 'home' route
   if (currentRoute === 'home') {
@@ -165,254 +175,214 @@ export default function App() {
 
   return (
     <div
-      className="dashboard-root"
+      className="dashboard-root flex flex-col w-full min-h-[100dvh]"
       style={{
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
         background: colors.bgApp,
         color: colors.textPrimary,
         fontFamily: "'IBM Plex Sans', system-ui, sans-serif",
       }}
     >
-      {/* ── HEADER ── */}
-      <header style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: '52px',
-        paddingLeft: '16px',
-        paddingRight: '16px',
-        background: colors.bgHeader,
-        borderBottom: `1px solid ${colors.borderPrimary}`,
-        boxShadow: colors.shadowSm,
-        flexShrink: 0,
-      }}>
-        {/* Logo + Home Button + Mine selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            onClick={() => {
-              setCurrentRoute('home')
-              try {
-                window.history.pushState({}, '', '/')
-              } catch {}
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 10px',
-              borderRadius: '5px',
-              background: colors.bgCardSubtle,
-              border: `1px solid ${colors.borderPrimary}`,
-              color: colors.accent,
-              fontFamily: 'IBM Plex Mono, monospace',
-              fontSize: '11px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-            title="Return to SENSORA Homepage"
-          >
-            ← Home
-          </button>
-
-          <SensoraLogo size={30} />
-          <div>
-            <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '15px', fontWeight: 700, color: colors.textPrimary, lineHeight: 1.1 }}>
-              SENSORA
-            </p>
-            <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', color: colors.textMuted, lineHeight: 1 }}>
-              Mine Subsidence Monitor
-            </p>
-          </div>
-
-          <div style={{ width: '1px', height: '32px', background: colors.borderPrimary, margin: '0 4px' }} />
-
-          {/* Mine / Panel dropdowns */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <select
-              style={{
-                background: colors.inputBg,
-                border: `1px solid ${colors.inputBorder}`,
-                color: colors.textSecondary,
-                fontFamily: 'IBM Plex Mono, monospace',
-                fontSize: '11px',
-                padding: '4px 8px',
-                borderRadius: '4px',
-                cursor: 'pointer',
+      {/* ── HEADER (Mobile & Desktop Adaptive) ── */}
+      <header
+        style={{
+          background: colors.bgHeader,
+          borderBottom: `1px solid ${colors.borderPrimary}`,
+          boxShadow: colors.shadowSm,
+          flexShrink: 0,
+        }}
+        className="px-3 sm:px-4 py-2"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Left: Home Button + Logo + Mine Title */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => {
+                setCurrentRoute('home')
+                try {
+                  window.history.pushState({}, '', '/')
+                } catch {}
               }}
-            >
-              <option>Demo Coalfield</option>
-              <option>Jharia Coalfield</option>
-            </select>
-            <select
-              value={activePanel}
-              onChange={e => setActivePanel(e.target.value)}
               style={{
-                background: colors.inputBg,
-                border: `1px solid ${colors.accentBorder}`,
+                background: colors.bgCardSubtle,
+                border: `1px solid ${colors.borderPrimary}`,
                 color: colors.accent,
                 fontFamily: 'IBM Plex Mono, monospace',
                 fontSize: '11px',
                 fontWeight: 600,
-                padding: '4px 8px',
-                borderRadius: '4px',
-                cursor: 'pointer',
               }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-md hover:opacity-90 transition-all cursor-pointer shadow-sm"
+              title="Return to SensOra Homepage"
             >
-              {PANELS.map(p => <option key={p} value={p}>{p}</option>)}
-              <option value="All">All Panels</option>
-            </select>
-          </div>
-        </div>
+              ← Home
+            </button>
 
-        {/* Right side: alert status + theme switcher + user */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {highCount > 0 && (
-            <div
-              className="pulse-high"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                padding: '4px 10px', borderRadius: '4px',
-                background: colors.isDark ? 'rgba(179,73,46,0.14)' : 'rgba(220,38,38,0.10)',
-                border: `1px solid ${riskHighColor}44`,
-              }}
-            >
-              <span style={{ color: riskHighColor, fontSize: '12px' }}>⚠</span>
-              <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '11px', color: riskHighColor, fontWeight: 600 }}>
-                {highCount} HIGH RISK
-              </span>
-            </div>
-          )}
-          {activeAlertCount > 0 && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '4px 10px', borderRadius: '4px',
-              background: colors.isDark ? 'rgba(217,142,59,0.10)' : 'rgba(180,83,9,0.08)',
-              border: `1px solid ${riskMedColor}44`,
-            }}>
-              <span style={{ color: riskMedColor, fontSize: '11px' }}>🔔</span>
-              <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '11px', color: riskMedColor }}>
-                {activeAlertCount} Alert{activeAlertCount !== 1 ? 's' : ''}
-              </span>
-            </div>
-          )}
-
-          {/* Theme Toggle Button */}
-          <button
-            onClick={toggleTheme}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '4px 10px',
-              borderRadius: '5px',
-              background: colors.bgCardSubtle,
-              border: `1px solid ${colors.borderSubtle}`,
-              color: colors.textPrimary,
-              fontFamily: 'IBM Plex Mono, monospace',
-              fontSize: '11px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
-            title={`Current: ${theme === 'light' ? 'White (Light)' : 'Dark'} Theme. Click to switch.`}
-          >
-            <span>{theme === 'light' ? '☀ White Theme' : '🌙 Dark Theme'}</span>
-          </button>
-
-          {/* Avatar / Auth */}
-          <div
-            onClick={() => setLoginModalOpen(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              border: `1px solid ${colors.borderSubtle}`,
-              background: colors.bgCardSubtle,
-            }}
-            className="hover:opacity-90 transition-opacity"
-            title={currentUser ? `Signed in as ${currentUser.email} (${currentUser.role}). Click to switch operator.` : 'Click to Sign In'}
-          >
-            <div style={{
-              width: '28px', height: '28px', borderRadius: '50%',
-              background: colors.accent, color: colors.isDark ? '#1A1714' : '#FFFFFF',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: '11px', fontWeight: 700,
-            }}>
-              {currentUser ? currentUser.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : '??'}
-            </div>
+            <SensoraLogo size={28} />
             <div>
-              <p style={{ fontSize: '11px', fontWeight: 600, color: colors.textPrimary, lineHeight: 1.1 }}>
-                {currentUser ? currentUser.full_name : 'Sign In'}
+              <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '15px', fontWeight: 700, color: colors.textPrimary, lineHeight: 1.1 }}>
+                SensOra
               </p>
-              <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', color: colors.textMuted }}>
-                {currentUser ? `${currentUser.role} · Demo Mine` : 'Operator Login'}
+              <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', color: colors.textMuted, lineHeight: 1 }}>
+                Team RTECH 007 · SIH 2026
               </p>
+            </div>
+          </div>
+
+          {/* Right: Dropdowns, High Alerts, Theme, and Avatar */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Panel & Coalfield selectors */}
+            <div className="flex items-center gap-1.5">
+              <select
+                style={{
+                  background: colors.inputBg,
+                  border: `1px solid ${colors.inputBorder}`,
+                  color: colors.textSecondary,
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  fontSize: '11px',
+                  padding: '3px 6px',
+                  borderRadius: '4px',
+                }}
+                className="cursor-pointer"
+              >
+                <option>Demo Coalfield</option>
+                <option>Jharia Coalfield</option>
+              </select>
+              <select
+                value={activePanel}
+                onChange={e => setActivePanel(e.target.value)}
+                style={{
+                  background: colors.inputBg,
+                  border: `1px solid ${colors.accentBorder}`,
+                  color: colors.accent,
+                  fontFamily: 'IBM Plex Mono, monospace',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '3px 6px',
+                  borderRadius: '4px',
+                }}
+                className="cursor-pointer"
+              >
+                {PANELS.map(p => <option key={p} value={p}>{p}</option>)}
+                <option value="All">All Panels</option>
+              </select>
+            </div>
+
+            {/* High Alert Pill */}
+            {highCount > 0 && (
+              <div
+                className="pulse-high flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-bold"
+                style={{
+                  background: colors.isDark ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.12)',
+                  border: `1px solid ${riskHighColor}66`,
+                  color: riskHighColor,
+                }}
+              >
+                <span>⚠ {highCount} HIGH</span>
+              </div>
+            )}
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              style={{
+                background: colors.bgCardSubtle,
+                border: `1px solid ${colors.borderSubtle}`,
+                color: colors.textPrimary,
+                fontFamily: 'IBM Plex Mono, monospace',
+                fontSize: '11px',
+                fontWeight: 600,
+              }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-md cursor-pointer hover:opacity-85 transition-all text-xs"
+              title="Toggle Theme"
+            >
+              <span>{theme === 'light' ? '☀ Light' : '🌙 Dark'}</span>
+            </button>
+
+            {/* Avatar */}
+            <div
+              onClick={() => setLoginModalOpen(true)}
+              style={{
+                border: `1px solid ${colors.borderSubtle}`,
+                background: colors.bgCardSubtle,
+              }}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:opacity-90 transition-opacity"
+              title={currentUser ? `Signed in as ${currentUser.email}` : 'Sign In'}
+            >
+              <div
+                style={{
+                  width: '24px', height: '24px', borderRadius: '50%',
+                  background: colors.accent, color: '#FFFFFF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px', fontWeight: 700,
+                }}
+              >
+                {currentUser ? currentUser.full_name.slice(0, 2).toUpperCase() : 'MM'}
+              </div>
+              <span className="hidden sm:inline text-[11px] font-semibold" style={{ color: colors.textPrimary }}>
+                {currentUser ? currentUser.full_name.split(' ')[0] : 'Admin'}
+              </span>
             </div>
           </div>
         </div>
       </header>
 
       {/* ── NAV BAR ── */}
-      <nav style={{
-        display: 'flex',
-        alignItems: 'center',
-        height: '38px',
-        paddingLeft: '16px',
-        paddingRight: '16px',
-        background: colors.bgNav,
-        borderBottom: `1px solid ${colors.borderDivider}`,
-        boxShadow: colors.shadowSm,
-        flexShrink: 0,
-        gap: '2px',
-      }}>
-        {(['Monitoring', 'Reports', 'Settings', 'Help'] as const).map(item => (
-          <button
-            key={item}
-            onClick={() => setActiveNav(item)}
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: '12px',
-              fontWeight: 600,
-              color: activeNav === item ? colors.accent : colors.textMuted,
-              background: activeNav === item ? colors.accentBg : 'transparent',
-              borderBottom: activeNav === item ? `2px solid ${colors.accent}` : '2px solid transparent',
-              padding: '0 14px',
-              height: '100%',
-              cursor: 'pointer',
-              border: 'none',
-              borderBottomStyle: 'solid',
-              transition: 'color 0.15s, border-color 0.15s, background-color 0.15s',
-            }}
-          >
-            {item}
-          </button>
-        ))}
+      <nav
+        style={{
+          background: colors.bgNav,
+          borderBottom: `1px solid ${colors.borderDivider}`,
+          boxShadow: colors.shadowSm,
+          flexShrink: 0,
+        }}
+        className="flex items-center justify-between h-[40px] px-3 sm:px-4 overflow-x-auto"
+      >
+        <div className="flex items-center gap-1 sm:gap-2 h-full shrink-0">
+          {(['Monitoring', 'Reports', 'Settings', 'Help'] as const).map(item => (
+            <button
+              key={item}
+              onClick={() => setActiveNav(item)}
+              style={{
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: '12px',
+                fontWeight: 600,
+                color: activeNav === item ? colors.accent : colors.textMuted,
+                background: activeNav === item ? colors.accentBg : 'transparent',
+                borderBottom: activeNav === item ? `2px solid ${colors.accent}` : '2px solid transparent',
+                padding: '0 12px',
+                height: '100%',
+                cursor: 'pointer',
+              }}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{
-            fontFamily: 'IBM Plex Mono, monospace',
-            fontSize: '10px',
-            color: connected ? riskLowColor : riskMedColor
-          }}>
-            {connected ? '⟳ LIVE' : '○ CONNECTING'} · {nodes.length} nodes · <LiveClock />
+        <div className="flex items-center gap-2 shrink-0">
+          <span
+            style={{
+              fontFamily: 'IBM Plex Mono, monospace',
+              fontSize: '10px',
+              color: connected ? riskLowColor : riskMedColor,
+            }}
+            className="hidden sm:inline"
+          >
+            {connected ? '⟳ LIVE' : '○ OFFLINE'} · {nodes.length} nodes · <LiveClock />
           </span>
           <button
             onClick={() => setSidebarOpen(p => !p)}
             style={{
-              fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: colors.textMuted,
-              border: `1px solid ${colors.borderSubtle}`, padding: '2px 8px', borderRadius: '3px',
-              background: 'transparent', cursor: 'pointer',
+              fontFamily: 'IBM Plex Mono, monospace',
+              fontSize: '10px',
+              color: colors.accent,
+              border: `1px solid ${colors.accentBorder}`,
+              background: colors.accentBg,
+              padding: '2px 8px',
+              borderRadius: '4px',
+              cursor: 'pointer',
             }}
-            className="hover:opacity-80 transition-opacity"
+            className="hover:opacity-80 transition-opacity flex items-center gap-1 font-semibold"
           >
-            {sidebarOpen ? '◀ Sidebar' : '▶ Sidebar'}
+            <span>{sidebarOpen ? '✕ Hide Stats' : '☰ Stats / Alerts'}</span>
           </button>
         </div>
       </nav>
@@ -420,19 +390,18 @@ export default function App() {
       {/* ── MAIN BODY ── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        {/* ── LEFT SIDEBAR — only on Monitoring page ── */}
-        {sidebarOpen && activeNav === 'Monitoring' && (
-          <aside style={{
-            width: '260px',
-            flexShrink: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            background: colors.bgSidebar,
-            borderRight: `1px solid ${colors.borderPrimary}`,
-            overflow: 'hidden',
-          }}>
+        {/* ── DESKTOP LEFT SIDEBAR ── */}
+        {sidebarOpen && (
+          <aside
+            style={{
+              width: '260px',
+              flexShrink: 0,
+              background: colors.bgSidebar,
+              borderRight: `1px solid ${colors.borderPrimary}`,
+            }}
+            className="hidden lg:flex flex-col overflow-hidden"
+          >
             <div style={{ flex: 1, overflowY: 'auto', padding: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-
               {/* Quick Stats */}
               <div style={{ background: colors.bgCard, border: `1px solid ${colors.borderPrimary}`, borderRadius: '6px', padding: '10px 12px', boxShadow: colors.shadowSm }}>
                 <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px', fontWeight: 700, color: colors.accent, letterSpacing: '0.08em', marginBottom: '8px' }}>
@@ -449,48 +418,31 @@ export default function App() {
                   ].map(s => (
                     <div key={s.label}>
                       <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', color: colors.textMuted }}>{s.label}</p>
-                      <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '13px', fontWeight: 600, color: s.color }}>
-                        {s.value}
-                      </p>
+                      <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '12px', fontWeight: 600, color: s.color }}>{s.value}</p>
                     </div>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
-                  {[['Export Report', colors.accent], ['Analytics', colors.textMuted]].map(([lbl, col]) => (
-                    <button
-                      key={lbl}
-                      onClick={() => lbl === 'Export Report' && setActiveNav('Reports')}
-                      style={{
-                        flex: 1, fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px',
-                        color: col, background: colors.bgCardSubtle, border: `1px solid ${colors.borderSubtle}`,
-                        padding: '4px 0', borderRadius: '3px', cursor: 'pointer',
-                      }}
-                    >
-                      {lbl}
-                    </button>
                   ))}
                 </div>
               </div>
 
-              {/* Sensor List */}
+              {/* Sensor list */}
               <div style={{ background: colors.bgCard, border: `1px solid ${colors.borderPrimary}`, borderRadius: '6px', overflow: 'hidden', boxShadow: colors.shadowSm }}>
                 <div style={{ padding: '8px 12px', borderBottom: `1px solid ${colors.borderPrimary}`, background: colors.bgCardSubtle }}>
                   <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px', fontWeight: 700, color: colors.accent, letterSpacing: '0.08em' }}>
                     SENSORS — ALL PANELS
                   </p>
                 </div>
-                <div>
+                <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
                   {nodes.map(node => {
                     const isSel = selectedNode === node.id
                     const isHigh = node.risk === 'HIGH'
                     return (
                       <button
                         key={node.id}
-                        onClick={() => { setSelectedNode(node.id); setActivePanel(node.panel) }}
+                        onClick={() => setSelectedNode(node.id)}
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           width: '100%', padding: '7px 12px',
-                          background: isSel ? colors.accentBg : isHigh ? (colors.isDark ? 'rgba(179,73,46,0.05)' : 'rgba(220,38,38,0.04)') : 'transparent',
+                          background: isSel ? colors.accentBg : isHigh ? (colors.isDark ? 'rgba(239,68,68,0.06)' : 'rgba(239,68,68,0.04)') : 'transparent',
                           borderLeft: isSel ? `3px solid ${colors.accent}` : isHigh ? `3px solid ${riskHighColor}` : '3px solid transparent',
                           borderBottom: `1px solid ${colors.borderDivider}`,
                           cursor: 'pointer',
@@ -503,10 +455,7 @@ export default function App() {
                             {node.status === 'online' ? '✓' : '✗'}
                           </span>
                           <div>
-                            <p style={{
-                              fontFamily: 'IBM Plex Mono, monospace', fontSize: '11px', fontWeight: 600,
-                              color: isSel ? colors.accent : colors.textPrimary, lineHeight: 1.1,
-                            }}>
+                            <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '11px', fontWeight: 600, color: isSel ? colors.accent : colors.textPrimary, lineHeight: 1.1 }}>
                               {node.label}
                             </p>
                             <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', color: colors.textMuted }}>{node.panel}</p>
@@ -517,11 +466,6 @@ export default function App() {
                     )
                   })}
                 </div>
-                <div style={{ padding: '7px 12px', borderTop: `1px solid ${colors.borderPrimary}`, background: colors.bgCardSubtle }}>
-                  <button style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: colors.accent, fontWeight: 600 }}>
-                    + Add Sensor
-                  </button>
-                </div>
               </div>
 
               {/* Alert Log */}
@@ -531,12 +475,12 @@ export default function App() {
                     ALERTS — LAST 24H
                   </p>
                 </div>
-                {alerts.map(alert => (
+                {alerts.slice(0, 5).map(alert => (
                   <div
                     key={alert.id}
                     style={{
                       padding: '8px 12px', borderBottom: `1px solid ${colors.borderDivider}`,
-                      background: alert.status === 'active' && alert.level === 'HIGH' ? (colors.isDark ? 'rgba(179,73,46,0.05)' : 'rgba(220,38,38,0.05)') : 'transparent',
+                      background: alert.status === 'active' && alert.level === 'HIGH' ? (colors.isDark ? 'rgba(239,68,68,0.06)' : 'rgba(239,68,68,0.05)') : 'transparent',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
@@ -545,7 +489,6 @@ export default function App() {
                           fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', fontWeight: 700,
                           color: alert.level === 'HIGH' ? riskHighColor : alert.level === 'MEDIUM' ? riskMedColor : riskLowColor
                         }}
-                        className={alert.status === 'active' && alert.level === 'HIGH' ? 'pulse-high' : undefined}
                       >
                         [{alert.level}]
                       </span>
@@ -554,118 +497,225 @@ export default function App() {
                     <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: colors.textSecondary, marginBottom: '4px' }}>
                       {alert.panel} · N{(alert.nodeIds || []).join(', N')}
                     </p>
-                    {alert.status === 'active' ? (
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        {[['Ack.', riskMedColor, () => handleAcknowledge(alert.id)], ['Snooze', colors.textMuted, () => {}]].map(([lbl, col, fn]) => (
-                          <button
-                            key={lbl as string}
-                            onClick={fn as () => void}
-                            style={{
-                              fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px',
-                              color: col as string, border: `1px solid ${col}44`,
-                              padding: '1px 6px', borderRadius: '3px', background: 'transparent', cursor: 'pointer',
-                            }}
-                          >
-                            {lbl as string}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <span style={{
-                        fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px',
-                        color: alert.status === 'resolved' ? riskLowColor : riskMedColor,
-                      }}>
-                        {alert.status === 'resolved' ? '✓ Resolved' : '◑ Acknowledged'}
-                      </span>
-                    )}
                   </div>
                 ))}
-                <div style={{ padding: '7px 12px', background: colors.bgCardSubtle }}>
-                  <button style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: colors.textMuted }}
-                    className="hover:opacity-80 transition-opacity">
-                    View More (30d) →
-                  </button>
-                </div>
               </div>
-
             </div>
           </aside>
         )}
 
+        {/* ── MOBILE SLIDE-OVER DRAWER FOR SIDEBAR ── */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden flex justify-start bg-black/60 backdrop-blur-sm">
+            <div
+              style={{
+                width: '85vw',
+                maxWidth: '320px',
+                background: colors.bgSidebar,
+                borderRight: `1px solid ${colors.borderPrimary}`,
+              }}
+              className="h-full flex flex-col p-4 overflow-y-auto shadow-2xl animate-in slide-in-from-left duration-200"
+            >
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
+                <span className="font-bold text-sm font-mono" style={{ color: colors.accent }}>Mine Overview & Alerts</span>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="px-2 py-1 rounded text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* Quick Stats in Drawer */}
+              <div style={{ background: colors.bgCard, border: `1px solid ${colors.borderPrimary}`, borderRadius: '8px', padding: '10px 12px', marginBottom: '12px' }}>
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px', fontWeight: 700, color: colors.accent, letterSpacing: '0.08em', marginBottom: '8px' }}>
+                  OVERALL STATUS
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div>
+                    <span className="text-slate-500 block text-[10px]">Active Nodes</span>
+                    <span className="font-bold" style={{ color: riskLowColor }}>{nodes.filter(n => n.status === 'online').length} / {nodes.length || 8}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px]">HIGH Alerts</span>
+                    <span className="font-bold" style={{ color: riskHighColor }}>{highCount}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px]">Avg Tilt</span>
+                    <span className="font-bold" style={{ color: colors.textPrimary }}>
+                      {(nodes.length ? nodes.reduce((s, n) => s + Math.abs(n.tilt || 0), 0) / nodes.length : 0).toFixed(1)}°
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px]">Max Tilt</span>
+                    <span className="font-bold" style={{ color: riskHighColor }}>
+                      {Math.max(...nodes.map(n => Math.abs(n.tilt || 0)), 0).toFixed(2)}°
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Alert Log in Drawer */}
+              <div style={{ background: colors.bgCard, border: `1px solid ${colors.borderPrimary}`, borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ padding: '8px 12px', borderBottom: `1px solid ${colors.borderPrimary}`, background: colors.bgCardSubtle }}>
+                  <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px', fontWeight: 700, color: colors.accent, letterSpacing: '0.08em' }}>
+                    ALERTS — LAST 24H
+                  </p>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {alerts.map(alert => (
+                    <div key={alert.id} className="p-2.5 text-xs font-mono">
+                      <div className="flex items-center justify-between mb-1">
+                        <span style={{ color: alert.level === 'HIGH' ? riskHighColor : alert.level === 'MEDIUM' ? riskMedColor : riskLowColor, fontWeight: 700 }}>
+                          [{alert.level}]
+                        </span>
+                        <span className="text-[10px] text-slate-400">{alert.timestamp}</span>
+                      </div>
+                      <p className="text-[11px]" style={{ color: colors.textSecondary }}>
+                        {alert.panel} · N{(alert.nodeIds || []).join(', N')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── MAIN CONTENT ── */}
         {activeNav === 'Monitoring' ? (
-          <main style={{
-            flex: 1,
-            display: 'flex',
-            overflow: 'hidden',
-            gap: '8px',
-            padding: '8px',
-            minWidth: 0,
-            background: colors.bgApp,
-          }}>
-            {/* LEFT COLUMN: GIS + Cross-section (65%) */}
-            <div style={{
-              flex: '0 0 65%',
-              minWidth: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              overflow: 'hidden',
-            }}>
-              {/* GIS Map — hero */}
-              <div style={{ flex: 1, minHeight: 0 }}>
-                <GISMap
-                  nodes={nodes}
-                  selectedNode={selectedNode}
-                  onSelectNode={setSelectedNode}
-                  activePanel={activePanel}
-                />
-              </div>
-              {/* Cross-section */}
-              <div style={{ flexShrink: 0 }}>
-                <CrossSection
-                  nodes={nodes}
-                  selectedNode={selectedNode}
-                  activePanel={activePanel}
-                />
-              </div>
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ background: colors.bgApp }}>
+
+            {/* ── MOBILE SEGMENTED VIEW SWITCHER (Appears on screens < 1024px) ── */}
+            <div
+              className="lg:hidden px-3 py-2 border-b flex items-center gap-1.5 overflow-x-auto shrink-0"
+              style={{
+                background: colors.bgCardSubtle,
+                borderColor: colors.borderPrimary,
+              }}
+            >
+              {[
+                { id: 'map', label: '🗺 Map & Strata' },
+                { id: 'table', label: `📊 Readings (${nodes.filter(n => activePanel === 'All' || n.panel === activePanel).length})` },
+                { id: 'risk', label: highCount > 0 ? `🧠 AI Risk (⚠ ${highCount})` : '🧠 AI & Risk' },
+                { id: 'all', label: '📜 Full View' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setMobileTab(tab.id as any)}
+                  style={{
+                    fontFamily: 'IBM Plex Mono, monospace',
+                    fontSize: '11px',
+                    fontWeight: mobileTab === tab.id ? 700 : 500,
+                    background: mobileTab === tab.id ? colors.accent : 'transparent',
+                    color: mobileTab === tab.id ? '#FFFFFF' : colors.textSecondary,
+                    border: mobileTab === tab.id ? `1px solid ${colors.accent}` : `1px solid ${colors.borderSubtle}`,
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg whitespace-nowrap transition-all shadow-xs cursor-pointer"
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            {/* RIGHT COLUMN: Readings + Risk (35%) */}
-            <div style={{
-              flex: '0 0 35%',
-              minWidth: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              overflow: 'hidden',
-            }}>
-              {/* Live Readings Table (55%) */}
-              <div style={{ flex: '0 0 55%', minHeight: 0, overflow: 'hidden' }}>
-                <ReadingsTable
-                  nodes={nodes}
-                  selectedNode={selectedNode}
-                  onSelectNode={setSelectedNode}
-                  activePanel={activePanel}
-                />
+            {/* ── DESKTOP SPLIT VIEW (Screens >= 1024px) ── */}
+            <main
+              style={{
+                flex: 1,
+                gap: '8px',
+                padding: '8px',
+                minWidth: 0,
+                background: colors.bgApp,
+              }}
+              className="hidden lg:flex overflow-hidden"
+            >
+              {/* LEFT COLUMN: GIS + Cross-section (65%) */}
+              <div style={{ flex: '0 0 65%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
+                <div style={{ flex: 1, minHeight: 0 }}>
+                  <GISMap nodes={nodes} selectedNode={selectedNode} onSelectNode={setSelectedNode} activePanel={activePanel} />
+                </div>
+                <div style={{ flexShrink: 0 }}>
+                  <CrossSection nodes={nodes} selectedNode={selectedNode} activePanel={activePanel} />
+                </div>
               </div>
-              {/* Risk & AI Panel (45%) */}
-              <div style={{ flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
-                <RiskPanel
-                  nodes={nodes}
-                  alerts={alerts}
-                  onAcknowledge={handleAcknowledge}
-                  activePanel={activePanel}
-                />
+
+              {/* RIGHT COLUMN: Readings + Risk (35%) */}
+              <div style={{ flex: '0 0 35%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
+                <div style={{ flex: '0 0 55%', minHeight: 0, overflow: 'hidden' }}>
+                  <ReadingsTable nodes={nodes} selectedNode={selectedNode} onSelectNode={setSelectedNode} activePanel={activePanel} />
+                </div>
+                <div style={{ flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
+                  <RiskPanel nodes={nodes} alerts={alerts} onAcknowledge={handleAcknowledge} activePanel={activePanel} />
+                </div>
               </div>
+            </main>
+
+            {/* ── MOBILE ADAPTIVE VIEW (Screens < 1024px) ── */}
+            <div className="lg:hidden flex-1 overflow-y-auto p-3 space-y-3 pb-24">
+              {(mobileTab === 'map' || mobileTab === 'all') && (
+                <div className="space-y-3">
+                  <div
+                    className="rounded-xl overflow-hidden shadow-sm"
+                    style={{
+                      height: '340px',
+                      background: colors.bgCanvas,
+                      border: `1px solid ${colors.borderPrimary}`,
+                    }}
+                  >
+                    <GISMap nodes={nodes} selectedNode={selectedNode} onSelectNode={setSelectedNode} activePanel={activePanel} />
+                  </div>
+                  <div
+                    className="rounded-xl overflow-hidden shadow-sm"
+                    style={{
+                      minHeight: '210px',
+                      background: colors.bgCanvas,
+                      border: `1px solid ${colors.borderPrimary}`,
+                    }}
+                  >
+                    <CrossSection nodes={nodes} selectedNode={selectedNode} activePanel={activePanel} />
+                  </div>
+                </div>
+              )}
+
+              {(mobileTab === 'table' || mobileTab === 'all') && (
+                <div
+                  className="rounded-xl overflow-hidden shadow-sm"
+                  style={{
+                    minHeight: '460px',
+                    background: colors.bgCanvas,
+                    border: `1px solid ${colors.borderPrimary}`,
+                  }}
+                >
+                  <ReadingsTable nodes={nodes} selectedNode={selectedNode} onSelectNode={setSelectedNode} activePanel={activePanel} />
+                </div>
+              )}
+
+              {(mobileTab === 'risk' || mobileTab === 'all') && (
+                <div
+                  className="rounded-xl overflow-hidden shadow-sm"
+                  style={{
+                    minHeight: '400px',
+                    background: colors.bgCanvas,
+                    border: `1px solid ${colors.borderPrimary}`,
+                  }}
+                >
+                  <RiskPanel nodes={nodes} alerts={alerts} onAcknowledge={handleAcknowledge} activePanel={activePanel} />
+                </div>
+              )}
             </div>
-          </main>
+          </div>
         ) : activeNav === 'Reports' ? (
-          <ReportsPage nodes={nodes} alerts={alerts} activePanel={activePanel} />
+          <div className="flex-1 overflow-y-auto">
+            <ReportsPage nodes={nodes} alerts={alerts} activePanel={activePanel} />
+          </div>
         ) : activeNav === 'Settings' ? (
-          <SettingsPage />
+          <div className="flex-1 overflow-y-auto">
+            <SettingsPage />
+          </div>
         ) : activeNav === 'Help' ? (
-          <HelpPage />
+          <div className="flex-1 overflow-y-auto">
+            <HelpPage />
+          </div>
         ) : null}
       </div>
 

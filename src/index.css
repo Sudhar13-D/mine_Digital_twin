@@ -18,8 +18,16 @@ body {
 }
 
 .dashboard-root {
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh;
+  height: auto;
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-root {
+    height: 100vh;
+    overflow: hidden;
+  }
 }
 
 body {
@@ -30,8 +38,8 @@ body {
 }
 
 body.dark-theme {
-  background: #1A1714;
-  color: #EDE6DA;
+  background: #0A0E1A;
+  color: #F8FAFC;
 }
 
 body.light-theme {

@@ -22,6 +22,17 @@ export interface ThemeColors {
   accent: string
   accentBg: string
   accentBorder: string
+  techCyan: string
+  techCyanBg: string
+  riskLow: string
+  riskMedium: string
+  riskHigh: string
+  riskLowBg: string
+  riskMediumBg: string
+  riskHighBg: string
+  riskLowBorder: string
+  riskMediumBorder: string
+  riskHighBorder: string
   inputBg: string
   inputBorder: string
   inputText: string
@@ -45,8 +56,8 @@ export const lightColors: ThemeColors = {
   bgNav: '#FFFFFF',
   bgSidebar: '#FFFFFF',
   bgCard: '#FFFFFF',
-  bgCardSubtle: '#F8FAFC',
-  bgCardHover: '#F1F5F9',
+  bgCardSubtle: '#F1F5F9',
+  bgCardHover: '#F8FAFC',
   bgCanvas: '#FFFFFF',
   bgWell: '#F1F5F9',
   borderPrimary: '#E2E8F0',
@@ -55,15 +66,26 @@ export const lightColors: ThemeColors = {
   textPrimary: '#0F172A',
   textSecondary: '#334155',
   textMuted: '#64748B',
-  accent: '#B45309', // warm amber-gold, high contrast on white
-  accentBg: 'rgba(180, 83, 9, 0.08)',
-  accentBorder: 'rgba(180, 83, 9, 0.25)',
+  accent: '#EA580C', // SensOra Safety Orange
+  accentBg: 'rgba(234, 88, 12, 0.08)',
+  accentBorder: 'rgba(234, 88, 12, 0.28)',
+  techCyan: '#0284C7', // SensOra Sky/Cyan
+  techCyanBg: 'rgba(2, 132, 199, 0.08)',
+  riskLow: '#059669',
+  riskMedium: '#D97706',
+  riskHigh: '#DC2626',
+  riskLowBg: 'rgba(5, 150, 105, 0.08)',
+  riskMediumBg: 'rgba(217, 119, 6, 0.08)',
+  riskHighBg: 'rgba(220, 38, 38, 0.08)',
+  riskLowBorder: 'rgba(5, 150, 105, 0.25)',
+  riskMediumBorder: 'rgba(217, 119, 6, 0.25)',
+  riskHighBorder: 'rgba(220, 38, 38, 0.25)',
   inputBg: '#FFFFFF',
   inputBorder: '#CBD5E1',
   inputText: '#0F172A',
-  tableHeaderBg: '#F8FAFC',
-  tableRowHover: '#F1F5F9',
-  tableRowSelected: 'rgba(180, 83, 9, 0.08)',
+  tableHeaderBg: '#F1F5F9',
+  tableRowHover: 'rgba(234, 88, 12, 0.03)',
+  tableRowSelected: 'rgba(234, 88, 12, 0.09)',
   tableBorder: '#E2E8F0',
   gridStroke: '#E2E8F0',
   roadStroke: '#CBD5E1',
@@ -76,38 +98,49 @@ export const lightColors: ThemeColors = {
 
 export const darkColors: ThemeColors = {
   isDark: true,
-  bgApp: '#1A1714',
-  bgHeader: '#211E18',
-  bgNav: '#1C1914',
-  bgSidebar: '#1C1914',
-  bgCard: '#24211C',
-  bgCardSubtle: '#1A1714',
-  bgCardHover: '#2A2520',
-  bgCanvas: '#0A0907',
-  bgWell: '#1A1714',
-  borderPrimary: '#2A2520',
-  borderSubtle: '#39332B',
-  borderDivider: '#242018',
-  textPrimary: '#EDE6DA',
-  textSecondary: '#B8B0A4',
-  textMuted: '#5A5248',
-  accent: '#C9A66B',
-  accentBg: 'rgba(201, 166, 107, 0.1)',
-  accentBorder: 'rgba(201, 166, 107, 0.3)',
-  inputBg: '#1A1714',
-  inputBorder: '#39332B',
-  inputText: '#EDE6DA',
-  tableHeaderBg: '#1E1A16',
-  tableRowHover: '#24211C',
-  tableRowSelected: 'rgba(201, 166, 107, 0.07)',
-  tableBorder: '#1E1A16',
-  gridStroke: '#161310',
-  roadStroke: '#161310',
-  coordFill: '#27221C',
-  shadowSm: 'none',
-  shadowMd: 'none',
-  tooltipBg: '#1A1714',
-  tooltipText: '#EDE6DA',
+  bgApp: '#0A0E1A',
+  bgHeader: '#0F172A',
+  bgNav: '#0F172A',
+  bgSidebar: '#0F172A',
+  bgCard: '#111827',
+  bgCardSubtle: '#0F172A',
+  bgCardHover: '#1E293B',
+  bgCanvas: '#080C14',
+  bgWell: '#0F172A',
+  borderPrimary: '#1E293B',
+  borderSubtle: '#334155',
+  borderDivider: '#1E293B',
+  textPrimary: '#F8FAFC',
+  textSecondary: '#94A3B8',
+  textMuted: '#64748B',
+  accent: '#F97316', // SensOra Vibrant Amber/Orange
+  accentBg: 'rgba(249, 115, 22, 0.12)',
+  accentBorder: 'rgba(249, 115, 22, 0.35)',
+  techCyan: '#38BDF8', // SensOra Electric Cyan
+  techCyanBg: 'rgba(56, 189, 248, 0.12)',
+  riskLow: '#10B981',
+  riskMedium: '#F59E0B',
+  riskHigh: '#EF4444',
+  riskLowBg: 'rgba(16, 185, 129, 0.12)',
+  riskMediumBg: 'rgba(245, 158, 11, 0.14)',
+  riskHighBg: 'rgba(239, 68, 68, 0.16)',
+  riskLowBorder: 'rgba(16, 185, 129, 0.30)',
+  riskMediumBorder: 'rgba(245, 158, 11, 0.30)',
+  riskHighBorder: 'rgba(239, 68, 68, 0.35)',
+  inputBg: '#0F172A',
+  inputBorder: '#334155',
+  inputText: '#F8FAFC',
+  tableHeaderBg: '#0F172A',
+  tableRowHover: '#1E293B',
+  tableRowSelected: 'rgba(249, 115, 22, 0.14)',
+  tableBorder: '#1E293B',
+  gridStroke: '#1E293B',
+  roadStroke: '#334155',
+  coordFill: '#475569',
+  shadowSm: '0 1px 3px 0 rgba(0, 0, 0, 0.4)',
+  shadowMd: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+  tooltipBg: '#0F172A',
+  tooltipText: '#F8FAFC',
 }
 
 interface ThemeContextType {
@@ -150,8 +183,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else {
       document.body.classList.remove('light-theme')
       document.body.classList.add('dark-theme')
-      document.body.style.background = '#1A1714'
-      document.body.style.color = '#EDE6DA'
+      document.body.style.background = '#0A0E17'
+      document.body.style.color = '#F1F5F9'
     }
   }, [theme])
 

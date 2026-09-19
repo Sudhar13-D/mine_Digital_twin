@@ -36,9 +36,11 @@ export default function GISMap({ nodes, selectedNode, onSelectNode, activePanel 
   const [hoveredNode, setHoveredNode] = useState<number | null>(null)
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
 
-  const RISK_COLOR: Record<string, string> = colors.isDark
-    ? { LOW: '#4C8C6B', MEDIUM: '#D98E3B', HIGH: '#B3492E' }
-    : { LOW: '#15803D', MEDIUM: '#B45309', HIGH: '#DC2626' }
+  const RISK_COLOR: Record<string, string> = {
+    LOW: colors.riskLow,
+    MEDIUM: colors.riskMedium,
+    HIGH: colors.riskHigh,
+  }
 
   const toggle = (k: keyof LayerConfig) => setLayers(p => ({ ...p, [k]: !p[k] }))
 
@@ -72,7 +74,7 @@ export default function GISMap({ nodes, selectedNode, onSelectNode, activePanel 
 
   return (
     <div
-      className="flex flex-col h-full rounded-md"
+      className="flex flex-col h-full rounded-md overflow-hidden"
       style={{
         background: colors.bgCanvas,
         border: `1px solid ${colors.borderPrimary}`,
@@ -82,7 +84,7 @@ export default function GISMap({ nodes, selectedNode, onSelectNode, activePanel 
     >
       {/* Toolbar */}
       <div
-        className="flex items-center justify-between px-3 py-2 shrink-0"
+        className="flex flex-wrap items-center justify-between px-3 py-2 shrink-0 gap-2"
         style={{
           borderBottom: `1px solid ${colors.borderPrimary}`,
           background: colors.bgCardSubtle,
@@ -94,7 +96,7 @@ export default function GISMap({ nodes, selectedNode, onSelectNode, activePanel 
           </span>
           <span style={{ color: colors.textMuted, fontSize: '10px' }}>—</span>
           <span style={{ color: colors.textMuted, fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px' }}>
-            {activePanel} · Panel Boundary + Sensor Nodes
+            {activePanel} · Panel & Sensors
           </span>
           {activePanel !== 'All' && (
             <span style={{
@@ -102,11 +104,11 @@ export default function GISMap({ nodes, selectedNode, onSelectNode, activePanel 
               color: colors.accent, background: colors.accentBg,
               border: `1px solid ${colors.accentBorder}`, padding: '1px 6px', borderRadius: '3px',
             }}>
-              FILTERING: {activePanel}
+              FILTER: {activePanel}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {(['heatmap', 'pillars', 'vectors', 'grid'] as (keyof LayerConfig)[]).map(k => (
             <label key={k} className="flex items-center gap-1 cursor-pointer select-none">
               <input type="checkbox" checked={layers[k]} onChange={() => toggle(k)} className="w-3 h-3" style={{ accentColor: colors.accent }} />

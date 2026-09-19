@@ -40,16 +40,21 @@ export default function ReadingsTable({ nodes, selectedNode, onSelectNode, activ
   const [showFull, setShowFull] = useState(false)
   const [sortCol, setSortCol] = useState<string>('risk')
   const [sortAsc, setSortAsc] = useState(false)
+  const [mobileLayout, setMobileLayout] = useState<'cards' | 'table'>('cards')
 
-  const RISK_COLOR: Record<RiskLevel, string> = colors.isDark
-    ? { LOW: '#4C8C6B', MEDIUM: '#D98E3B', HIGH: '#B3492E' }
-    : { LOW: '#15803D', MEDIUM: '#B45309', HIGH: '#DC2626' }
+  const RISK_COLOR: Record<RiskLevel, string> = {
+    LOW: colors.riskLow,
+    MEDIUM: colors.riskMedium,
+    HIGH: colors.riskHigh,
+  }
 
-  const RISK_BG: Record<RiskLevel, string> = colors.isDark
-    ? { LOW: 'rgba(76,140,107,0.08)', MEDIUM: 'rgba(217,142,59,0.10)', HIGH: 'rgba(179,73,46,0.14)' }
-    : { LOW: 'rgba(21,128,61,0.06)', MEDIUM: 'rgba(180,83,9,0.08)', HIGH: 'rgba(220,38,38,0.08)' }
+  const RISK_BG: Record<RiskLevel, string> = {
+    LOW: colors.riskLowBg,
+    MEDIUM: colors.riskMediumBg,
+    HIGH: colors.riskHighBg,
+  }
 
-  const normalTextColor = colors.isDark ? '#8A9E90' : '#334155'
+  const normalTextColor = colors.textSecondary
 
   const visible = activePanel === 'All' ? nodes : nodes.filter(n => n.panel === activePanel)
 
@@ -69,7 +74,7 @@ export default function ReadingsTable({ nodes, selectedNode, onSelectNode, activ
 
   return (
     <div
-      className="flex flex-col h-full rounded-md"
+      className="flex flex-col h-full rounded-md overflow-hidden"
       style={{
         background: colors.bgCanvas,
         border: `1px solid ${colors.borderPrimary}`,
@@ -79,7 +84,7 @@ export default function ReadingsTable({ nodes, selectedNode, onSelectNode, activ
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-3 py-2 shrink-0"
+        className="flex flex-wrap items-center justify-between px-3 py-2 shrink-0 gap-2"
         style={{
           borderBottom: `1px solid ${colors.borderPrimary}`,
           background: colors.bgCardSubtle,
@@ -97,23 +102,189 @@ export default function ReadingsTable({ nodes, selectedNode, onSelectNode, activ
             ⟳ 2s
           </span>
         </div>
-        <button
-          onClick={() => setShowFull(p => !p)}
-          className="text-[10px] px-2 py-0.5 rounded transition-colors font-medium"
-          style={{
-            fontFamily: 'IBM Plex Mono, monospace',
-            color: showFull ? colors.textPrimary : colors.accent,
-            border: `1px solid ${colors.borderSubtle}`,
-            background: showFull ? colors.accentBg : 'transparent',
-          }}
-        >
-          {showFull ? '← Quick View' : 'Full Suite →'}
-        </button>
+
+        <div className="flex items-center gap-1.5">
+          {/* Mobile view toggle: Cards vs Table */}
+          <div className="flex sm:hidden rounded p-0.5" style={{ background: colors.inputBg, border: `1px solid ${colors.borderSubtle}` }}>
+            <button
+              onClick={() => setMobileLayout('cards')}
+              className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-all cursor-pointer"
+              style={{
+                background: mobileLayout === 'cards' ? colors.accent : 'transparent',
+                color: mobileLayout === 'cards' ? '#FFFFFF' : colors.textMuted,
+              }}
+            >
+              Cards
+            </button>
+            <button
+              onClick={() => setMobileLayout('table')}
+              className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold transition-all cursor-pointer"
+              style={{
+                background: mobileLayout === 'table' ? colors.accent : 'transparent',
+                color: mobileLayout === 'table' ? '#FFFFFF' : colors.textMuted,
+              }}
+            >
+              Table
+            </button>
+          </div>
+
+          <button
+            onClick={() => setShowFull(p => !p)}
+            className="text-[10px] px-2 py-0.5 rounded transition-colors font-medium cursor-pointer"
+            style={{
+              fontFamily: 'IBM Plex Mono, monospace',
+              color: showFull ? colors.textPrimary : colors.accent,
+              border: `1px solid ${colors.borderSubtle}`,
+              background: showFull ? colors.accentBg : 'transparent',
+            }}
+          >
+            {showFull ? '← Quick' : 'Full Suite →'}
+          </button>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="flex-1 overflow-auto">
-        <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+      {/* MOBILE CARDS VIEW (When on small screens & cards mode) */}
+      <div className={`sm:hidden flex-1 overflow-y-auto p-2.5 space-y-2.5 ${mobileLayout === 'cards' ? 'block' : 'hidden'}`}>
+        <div className="flex items-center justify-between pb-1 text-[10px] font-mono" style={{ color: colors.textMuted }}>
+          <span>Tap sensor card to inspect details</span>
+          <button
+            onClick={() => handleSort('risk')}
+            className="font-semibold underline cursor-pointer"
+            style={{ color: colors.accent }}
+          >
+            Sort by Risk {sortCol === 'risk' ? (sortAsc ? '↑' : '↓') : ''}
+          </button>
+        </div>
+
+        {sorted.map((node) => {
+          const isSelected = selectedNode === node.id
+          const isHigh = node.risk === 'HIGH'
+          const col = RISK_COLOR[node.risk]
+          const bg = RISK_BG[node.risk]
+
+          return (
+            <div
+              key={node.id}
+              onClick={() => onSelectNode(node.id)}
+              className={`p-3 rounded-lg border transition-all cursor-pointer ${isSelected ? 'ring-2' : ''}`}
+              style={{
+                background: isSelected ? colors.tableRowSelected : colors.bgCard,
+                borderColor: isSelected ? colors.accent : `${col}44`,
+                boxShadow: colors.shadowSm,
+              }}
+            >
+              {/* Card top row */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span style={{ color: node.status === 'online' ? RISK_COLOR.LOW : RISK_COLOR.HIGH, fontSize: '11px' }}>
+                    {node.status === 'online' ? '●' : '○'}
+                  </span>
+                  <span className="font-mono font-bold text-xs" style={{ color: isSelected ? colors.accent : colors.textPrimary }}>
+                    {node.label}
+                  </span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: colors.bgCardSubtle, color: colors.textMuted }}>
+                    {node.panel}
+                  </span>
+                </div>
+                <span
+                  className={isHigh ? 'pulse-high' : undefined}
+                  style={{
+                    fontFamily: 'IBM Plex Mono, monospace',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: col,
+                    background: bg,
+                    border: `1px solid ${col}44`,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  {node.risk} RISK
+                </span>
+              </div>
+
+              {/* Card metrics grid */}
+              <div className="grid grid-cols-4 gap-1.5 text-center font-mono">
+                <div className="p-1.5 rounded" style={{ background: colors.bgCardSubtle, border: `1px solid ${colors.borderDivider}` }}>
+                  <span className="block text-[8px] text-slate-400">TILT</span>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{
+                      color: node.tilt != null && Math.abs(Number(node.tilt)) > 5 ? RISK_COLOR.HIGH : Math.abs(Number(node.tilt || 0)) > 2 ? RISK_COLOR.MEDIUM : normalTextColor,
+                    }}
+                  >
+                    {node.tilt != null ? `${Number(node.tilt) > 0 ? '+' : ''}${Number(node.tilt).toFixed(2)}°` : '—'}
+                  </span>
+                </div>
+
+                <div className="p-1.5 rounded" style={{ background: colors.bgCardSubtle, border: `1px solid ${colors.borderDivider}` }}>
+                  <span className="block text-[8px] text-slate-400">VIB (g)</span>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{
+                      color: node.vibration != null && Number(node.vibration) > 1.5 ? RISK_COLOR.HIGH : Number(node.vibration || 0) > 0.5 ? RISK_COLOR.MEDIUM : normalTextColor,
+                    }}
+                  >
+                    {node.vibration != null ? Number(node.vibration).toFixed(2) : '—'}
+                  </span>
+                </div>
+
+                <div className="p-1.5 rounded" style={{ background: colors.bgCardSubtle, border: `1px solid ${colors.borderDivider}` }}>
+                  <span className="block text-[8px] text-slate-400">AE (Ev/m)</span>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{
+                      color: node.ae != null && Number(node.ae) > 80 ? RISK_COLOR.HIGH : Number(node.ae || 0) > 20 ? RISK_COLOR.MEDIUM : normalTextColor,
+                    }}
+                  >
+                    {node.ae != null ? node.ae : '—'}
+                  </span>
+                </div>
+
+                <div className="p-1.5 rounded" style={{ background: colors.bgCardSubtle, border: `1px solid ${colors.borderDivider}` }}>
+                  <span className="block text-[8px] text-slate-400">DISP</span>
+                  <span
+                    className="text-xs font-semibold"
+                    style={{
+                      color: node.displacement != null && Number(node.displacement) > 25 ? RISK_COLOR.HIGH : Number(node.displacement || 0) > 8 ? RISK_COLOR.MEDIUM : normalTextColor,
+                    }}
+                  >
+                    {node.displacement != null ? `+${node.displacement}mm` : '—'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Extended telemetry if Full Suite active */}
+              {showFull && (
+                <div className="grid grid-cols-4 gap-1.5 text-center font-mono mt-1.5 pt-1.5 border-t border-dashed" style={{ borderColor: colors.borderDivider }}>
+                  <div>
+                    <span className="block text-[8px] text-slate-400">MOIST</span>
+                    <span className="text-[11px] font-semibold" style={{ color: normalTextColor }}>{node.soilMoisture != null ? `${node.soilMoisture}%` : '—'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[8px] text-slate-400">TEMP</span>
+                    <span className="text-[11px] font-semibold" style={{ color: normalTextColor }}>{node.temp != null ? `${node.temp}°C` : '—'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[8px] text-slate-400">UWB</span>
+                    <span className="text-[11px] font-semibold" style={{ color: normalTextColor }}>{node.uwb != null ? `${node.uwb}mm` : '—'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[8px] text-slate-400">CRACK</span>
+                    <span className="text-[11px] font-semibold" style={{ color: node.crack && Number(node.crack) > 1.5 ? RISK_COLOR.MEDIUM : normalTextColor }}>
+                      {node.crack != null ? `${Number(node.crack).toFixed(1)}mm` : '—'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* SPREADSHEET TABLE VIEW (Desktop default or Mobile Table mode) */}
+      <div className={`flex-1 overflow-x-auto overflow-y-auto ${mobileLayout === 'table' ? 'block' : 'hidden sm:block'}`}>
+        <table className="w-full border-collapse" style={{ tableLayout: 'fixed', minWidth: showFull ? '640px' : '440px' }}>
           <colgroup>
             <col style={{ width: '58px' }} />
             <col style={{ width: '64px' }} />
@@ -278,7 +449,7 @@ export default function ReadingsTable({ nodes, selectedNode, onSelectNode, activ
           Updated 2s ago · Auto-refresh ON
         </span>
         <button style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', color: colors.textSecondary }}
-          className="hover:opacity-80 transition-opacity">
+          className="hover:opacity-80 transition-opacity cursor-pointer">
           Export CSV ↗
         </button>
       </div>

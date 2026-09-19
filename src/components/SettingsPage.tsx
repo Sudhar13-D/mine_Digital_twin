@@ -17,16 +17,17 @@ function ThresholdRow({ label, unit, low, medium, high }: ThresholdRowProps) {
   const { colors } = useTheme()
   const [vals, setVals] = useState({ low, medium, high })
 
-  const RISK_COLOR: Record<string, string> = colors.isDark
-    ? { low: '#4C8C6B', medium: '#D98E3B', high: '#B3492E' }
-    : { low: '#15803D', medium: '#B45309', high: '#DC2626' }
+  const RISK_COLOR: Record<string, string> = {
+    low: colors.riskLow,
+    medium: colors.riskMedium,
+    high: colors.riskHigh,
+  }
 
   return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: '140px 1fr 1fr 1fr',
-      alignItems: 'center', gap: '10px',
-      padding: '10px 0', borderBottom: `1px solid ${colors.borderPrimary}`,
-    }}>
+    <div
+      className="grid grid-cols-1 sm:grid-cols-[140px_1fr_1fr_1fr] items-center gap-2 sm:gap-2.5 py-2.5"
+      style={{ borderBottom: `1px solid ${colors.borderPrimary}` }}
+    >
       <div>
         <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '11px', fontWeight: 600, color: colors.textPrimary }}>{label}</p>
         <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', color: colors.textMuted }}>{unit}</p>

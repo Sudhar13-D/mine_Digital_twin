@@ -13,17 +13,23 @@ export default function RiskPanel({ nodes, alerts, onAcknowledge, activePanel }:
   const { colors } = useTheme()
   const [escalateTarget, setEscalateTarget] = useState<string | null>(null)
 
-  const RISK_COLOR: Record<RiskLevel, string> = colors.isDark
-    ? { LOW: '#4C8C6B', MEDIUM: '#D98E3B', HIGH: '#B3492E' }
-    : { LOW: '#15803D', MEDIUM: '#B45309', HIGH: '#DC2626' }
+  const RISK_COLOR: Record<RiskLevel, string> = {
+    LOW: colors.riskLow,
+    MEDIUM: colors.riskMedium,
+    HIGH: colors.riskHigh,
+  }
 
-  const RISK_BG: Record<RiskLevel, string> = colors.isDark
-    ? { LOW: 'rgba(76,140,107,0.10)', MEDIUM: 'rgba(217,142,59,0.12)', HIGH: 'rgba(179,73,46,0.15)' }
-    : { LOW: 'rgba(21,128,61,0.07)', MEDIUM: 'rgba(180,83,9,0.08)', HIGH: 'rgba(220,38,38,0.08)' }
+  const RISK_BG: Record<RiskLevel, string> = {
+    LOW: colors.riskLowBg,
+    MEDIUM: colors.riskMediumBg,
+    HIGH: colors.riskHighBg,
+  }
 
-  const RISK_BORDER: Record<RiskLevel, string> = colors.isDark
-    ? { LOW: 'rgba(76,140,107,0.25)', MEDIUM: 'rgba(217,142,59,0.25)', HIGH: 'rgba(179,73,46,0.30)' }
-    : { LOW: 'rgba(21,128,61,0.25)', MEDIUM: 'rgba(180,83,9,0.25)', HIGH: 'rgba(220,38,38,0.25)' }
+  const RISK_BORDER: Record<RiskLevel, string> = {
+    LOW: colors.riskLowBorder,
+    MEDIUM: colors.riskMediumBorder,
+    HIGH: colors.riskHighBorder,
+  }
 
   const panelNodes = activePanel === 'All' ? nodes : nodes.filter(n => n.panel === activePanel)
   const panelAlerts = activePanel === 'All' ? alerts : alerts.filter(a => a.panel === activePanel)
@@ -104,7 +110,7 @@ export default function RiskPanel({ nodes, alerts, onAcknowledge, activePanel }:
           </div>
 
           {/* Anomaly bar */}
-          <div style={{ height: '5px', background: colors.isDark ? '#1A1714' : '#E2E8F0', borderRadius: '999px', overflow: 'hidden', marginBottom: '8px' }}>
+          <div style={{ height: '5px', background: colors.isDark ? '#1E293B' : '#E2E8F0', borderRadius: '999px', overflow: 'hidden', marginBottom: '8px' }}>
             <div
               style={{
                 height: '100%',
@@ -154,7 +160,7 @@ export default function RiskPanel({ nodes, alerts, onAcknowledge, activePanel }:
                 <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '10px', fontWeight: 600, color: RISK_COLOR[n.risk], width: '44px', flexShrink: 0 }}>
                   N{n.id}
                 </span>
-                <div style={{ flex: 1, height: '4px', background: colors.isDark ? '#1A1714' : '#E2E8F0', borderRadius: '999px', overflow: 'hidden' }}>
+                <div style={{ flex: 1, height: '4px', background: colors.isDark ? '#1E293B' : '#E2E8F0', borderRadius: '999px', overflow: 'hidden' }}>
                   <div
                     style={{
                       height: '100%',
