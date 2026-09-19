@@ -31,23 +31,14 @@ services:
   - type: web
     name: subsideai-frontend
     env: static
-    region: oregon
-    plan: free
-    rootDir: .
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: subsideai-backend
-          property: host
-      # Set VITE_WS_URL manually in Render dashboard if needed:
-      # wss://<your-backend-name>.onrender.com/ws/live
+    # After deployment, add VITE_API_URL in Render Dashboard:
+    # Key: VITE_API_URL, Value: https://subsideai-backend.onrender.com
 
 # ============================================================================
 # 3. PostgreSQL Database
