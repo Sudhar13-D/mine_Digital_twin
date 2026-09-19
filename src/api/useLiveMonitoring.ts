@@ -3,7 +3,20 @@ import type { SensorNode, Alert, RiskLevel } from '../types'
 import { INITIAL_NODES, INITIAL_ALERTS } from '../data'
 import { api } from './client'
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws/live'
+function getWebSocketUrl(): string {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL
+  }
+  const apiUrl = import.meta.env.VITE_API_URL
+  if (apiUrl) {
+    const wsProto = apiUrl.startsWith('https') ? 'wss:' : 'ws:'
+    const host = apiUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
+    return `${wsProto}//${host}/ws/live`
+  }
+  return 'ws://localhost:8000/ws/live'
+}
+
+const WS_URL = getWebSocketUrl()
 
 export function normalizeNode(raw: any): SensorNode {
   if (!raw) return raw
