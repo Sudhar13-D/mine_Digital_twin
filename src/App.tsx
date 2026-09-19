@@ -12,6 +12,8 @@ import RiskPanel from './components/RiskPanel'
 import ReportsPage from './components/ReportsPage'
 import SettingsPage from './components/SettingsPage'
 import HelpPage from './components/HelpPage'
+import SensoraHomepage from './components/SensoraHomepage'
+import { SensoraLogo } from './components/icons'
 
 function RiskBadge({ level, pulse }: { level: RiskLevel; pulse?: boolean }) {
   const { colors } = useTheme()
@@ -114,6 +116,32 @@ export default function App() {
     }
   }, [toast, acknowledgeAlert, clearToast])
 
+  const [currentRoute, setCurrentRoute] = useState<'home' | 'dashboard'>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase()
+      const hash = window.location.hash.toLowerCase()
+      if (path === '/dashboard' || hash.includes('dashboard')) {
+        return 'dashboard'
+      }
+    }
+    return 'home'
+  })
+
+  // Sync route on browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase()
+      const hash = window.location.hash.toLowerCase()
+      if (path === '/dashboard' || hash.includes('dashboard')) {
+        setCurrentRoute('dashboard')
+      } else {
+        setCurrentRoute('home')
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [])
+
   const highCount = nodes.filter(n => n.risk === 'HIGH').length
   const activeAlertCount = alerts.filter(a => a.status === 'active').length
 
@@ -121,10 +149,25 @@ export default function App() {
   const riskMedColor = colors.isDark ? '#D98E3B' : '#B45309'
   const riskLowColor = colors.isDark ? '#4C8C6B' : '#15803D'
 
+  // Render SENSORA Homepage if on 'home' route
+  if (currentRoute === 'home') {
+    return (
+      <SensoraHomepage
+        onNavigateToDashboard={() => {
+          setCurrentRoute('dashboard')
+          try {
+            window.history.pushState({}, '', '/dashboard')
+          } catch {}
+        }}
+      />
+    )
+  }
+
   return (
     <div
+      className="dashboard-root"
       style={{
-        height: '100%',
+        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -146,20 +189,39 @@ export default function App() {
         boxShadow: colors.shadowSm,
         flexShrink: 0,
       }}>
-        {/* Logo + Mine selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Hexagonal mine logo */}
-          <svg width="32" height="32" viewBox="0 0 32 32">
-            <polygon points="16,2 29,9 29,23 16,30 3,23 3,9" fill="none" stroke={colors.accent} strokeWidth="1.6" />
-            <polygon points="16,8 24,12 24,20 16,24 8,20 8,12" fill={colors.accent} fillOpacity="0.14" />
-            <circle cx="16" cy="16" r="3.5" fill={colors.accent} />
-            <line x1="16" y1="2" x2="16" y2="8" stroke={colors.accent} strokeWidth="1.1" />
-            <line x1="29" y1="9" x2="24" y2="12" stroke={colors.accent} strokeWidth="1.1" />
-            <line x1="29" y1="23" x2="24" y2="20" stroke={colors.accent} strokeWidth="1.1" />
-          </svg>
+        {/* Logo + Home Button + Mine selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            onClick={() => {
+              setCurrentRoute('home')
+              try {
+                window.history.pushState({}, '', '/')
+              } catch {}
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '5px',
+              background: colors.bgCardSubtle,
+              border: `1px solid ${colors.borderPrimary}`,
+              color: colors.accent,
+              fontFamily: 'IBM Plex Mono, monospace',
+              fontSize: '11px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            title="Return to SENSORA Homepage"
+          >
+            ← Home
+          </button>
+
+          <SensoraLogo size={30} />
           <div>
             <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: '15px', fontWeight: 700, color: colors.textPrimary, lineHeight: 1.1 }}>
-              SubsideAI
+              SENSORA
             </p>
             <p style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: '9px', color: colors.textMuted, lineHeight: 1 }}>
               Mine Subsidence Monitor
